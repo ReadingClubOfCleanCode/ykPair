@@ -3,33 +3,48 @@ require "spec"
 
 require "coins"
 
+# 標準入出力のフック用
+def capture(stdin_content = '')
+	old_stdin,old_stdout,old_stderr = $stdin,$stdout,$stderr
+	begin
+		$stdin = StringIO.new(stdin_content)
+		$stdout = StringIO.new
+		$stderr = StringIO.new
+		yield
+		{:stdout => $stdout.string, :stderr => $stderr.string}
+	ensure
+		$stdin,$stdout,$stderr = old_stdin,old_stdout,old_stderr
+	end
+end
+
+# テスト本体
 describe Coins do
 	it 'クラスがnewできること' do
 		Coins.new.should_not be_nil
 	end
 
 	it 'calc 入力チェック' do
-		input_count = { '500' => nil,
+		input = { '500' => nil,
 					'100' => 10,
 					'50' => 10,
 					'10' => 10,
 					'5' => 10,
-					'1' => 10 }
-		input_amount = 10
+					'1' => 10,
+					'amount' => 10 }
 		proc {
-			Coins.new.calc(input_count, input_amount)
+			Coins.new.calc(input)
 		}.should raise_error
 	end
 	
 	it 'calc 答えを出す' do
-		input_count = { 500 => 1,
+		input = { 500 => 1,
 					100 => 4,
 					50 => 1,
 					10 => 4,
 					5 => 1,
-					1 => 6 }
-		input_amount = 1000
-		Coins.new.calc(input_count, input_amount).should == { 500 => 1,
+					1 => 6,
+					'amount' => 1000 }
+		Coins.new.calc(input).should == { 500 => 1,
 			100 => 4,
 			50 => 1,
 			10 => 4,
@@ -39,17 +54,31 @@ describe Coins do
 	end
 	
 	it 'calc 答えがない場合' do
-		input_count = { 500 => 1,
+		input = { 500 => 1,
 					100 => 4,
 					50 => 1,
 					10 => 4,
 					5 => 1,
-					1 => 6 }
-		input_amount = 10000
+					1 => 6,
+					'amount' => 10000 }
 		proc {
-			Coins.new.calc(input_count, input_amount)
+			Coins.new.calc(input)
 		}.should raise_error
 	end
 	
+	it 'all' do
+		capture("6\n1\n4\n1\n4\n1\n1000\n") {
+			Coins.new.main
+		}.should == {:stdout => "Answer: C1=5, C5=1, C10=4, C50=1, C100=4, C500=1\n", :stderr => ""}
+	end
+	
+	it 'loadInput' do
+		capture("1\n2\n3\n4\n5\n6\n7\n") {
+			Coins.new.loadInput.should == {1 => 1, 5 => 2, 10 => 3, 50 => 4, 100 => 5, 500 => 6, 'amount' => 7}
+		}.should == {:stdout => "", :stderr => ""}
+	end
+	
+	it 'print' do
+	end
 end
 
