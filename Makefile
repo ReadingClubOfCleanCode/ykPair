@@ -1,5 +1,5 @@
 
 test:
 	@echo ------------------------------------------------------------
-	spec -c ./coins_spec.rb
+	spec -c ./CoinProblemSolver_spec.rb
 
